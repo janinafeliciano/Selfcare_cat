@@ -116,6 +116,21 @@
     shopFilter: 'all',
   };
 
+  /* ---------------- persistence ----------------
+     whole state is persisted as one JSON blob in localStorage, scoped to this browser/device only. */
+  const STORAGE_KEY = 'mochi-state-v1';
+  function saveState(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+  }
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return;
+      Object.assign(state, JSON.parse(raw));
+    }catch(e){}
+  }
+  loadState();
+
   // generates a short unique id for tasks (not a real UUID, just good enough locally)
   function cryptoId(){ return 'id-' + Math.random().toString(36).slice(2,10); }
   // formats a Date as 'YYYY-MM-DD', used as the key for state.history
@@ -283,6 +298,7 @@
   /* ---------------- tasks ---------------- */
   // (re)draws the today's-tasks checklist from state.tasks
   function renderTasks(){
+    saveState();
     const list = document.getElementById('taskList');
     list.innerHTML = '';
     if(state.tasks.length===0){
@@ -374,6 +390,7 @@
 
   // draws the week-strip, weekly-goal bar, level/XP bar and lifetime stats on the Overview tab
   function renderOverview(){
+    saveState();
     const days = getWeekDates(state.weekOffset);
     document.getElementById('weekTitle').textContent = state.weekOffset===0 ? 'Diese Woche' : (state.weekOffset<0 ? 'Vor '+(-state.weekOffset)+' Woche(n)' : 'In '+state.weekOffset+' Woche(n)');
 
@@ -421,6 +438,7 @@
   // renders the shop grid for the active category chip; each card ends up in one of four
   // states, checked in this order: locked (below minLevel) > buyable > equip/unequip > already owned
   function renderShop(){
+    saveState();
     document.querySelectorAll('.chip').forEach((el,i)=> el.classList.toggle('active', CHIPS[i].key===state.shopFilter));
     const grid = document.getElementById('shopGrid');
     grid.innerHTML = '';
